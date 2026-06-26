@@ -1,20 +1,28 @@
 import { z } from "zod";
 
+const optionalNumber = (schema: z.ZodNumber) =>
+  z.preprocess((value) => (value === "" || value === null ? undefined : value), schema.optional());
+
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(8)
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8)
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().trim().min(2),
   age: z.coerce.number().int().min(13).max(100),
   gender: z.string().min(2),
-  height: z.coerce.number().min(90).max(250),
-  weight: z.coerce.number().min(30).max(300),
+  height: optionalNumber(z.coerce.number().min(90).max(250)),
+  weight: optionalNumber(z.coerce.number().min(30).max(300)),
   goal: z.string().min(2),
   experienceLevel: z.string().min(2),
-  workoutTime: z.coerce.number().int().min(10).max(180),
-  email: z.string().email(),
+  workoutTime: optionalNumber(z.coerce.number().int().min(10).max(180)),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8)
 });
 

@@ -2,11 +2,12 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { Activity, Bot, CalendarDays, Dumbbell, Gauge, LayoutDashboard, LogOut, Salad, Shield, Utensils } from "lucide-react";
+import { Activity, Bot, CalendarDays, Dumbbell, Gauge, LayoutDashboard, LogOut, Salad, Shield, UserCircle, Utensils } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/bmi", label: "BMI", icon: Gauge },
   { href: "/calories", label: "Calories", icon: Utensils },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
