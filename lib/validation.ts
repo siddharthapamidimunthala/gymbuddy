@@ -32,9 +32,8 @@ export const bmiSchema = z.object({
 });
 
 export const calorieSchema = z.object({
-  food: z.string().min(2),
-  quantity: z.string().min(1),
-  calories: z.coerce.number().int().min(1).max(10000)
+  food: z.string().trim().min(2),
+  weightGrams: z.coerce.number().int().min(1).max(10000)
 });
 
 export const workoutSchema = z.object({

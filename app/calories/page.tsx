@@ -7,26 +7,33 @@ import { CaloriesChart } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { Card, StatCard } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { estimateFoodCalories } from "@/lib/nutrition";
 
 type Log = { id: string; food: string; quantity: string; calories: number; date: string };
 
 export default function CaloriesPage() {
   const [data, setData] = useState<{ logs: Log[]; totals: { today: number; weekly: number; monthly: number } }>({ logs: [], totals: { today: 0, weekly: 0, monthly: 0 } });
   const [status, setStatus] = useState("");
+  const [food, setFood] = useState("");
+  const [weightGrams, setWeightGrams] = useState("");
+  const estimate = food && Number(weightGrams) > 0 ? estimateFoodCalories(food, Number(weightGrams)) : null;
+
   async function load() {
     const response = await fetch("/api/calories");
     if (response.ok) setData(await response.json());
   }
+
   useEffect(() => { load(); }, []);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form));
-    const calories = Number(body.calories);
+    const calories = estimateFoodCalories(String(body.food), Number(body.weightGrams)).calories;
     const instantLog: Log = {
       id: `local-${Date.now()}`,
       food: String(body.food),
-      quantity: String(body.quantity),
+      quantity: `${Number(body.weightGrams)} g`,
       calories,
       date: new Date().toISOString()
     };
@@ -40,6 +47,8 @@ export default function CaloriesPage() {
     }));
     setStatus("Added instantly");
     form.reset();
+    setFood("");
+    setWeightGrams("");
     try {
       const response = await fetch("/api/calories", { method: "POST", body: JSON.stringify(body) });
       if (response.ok) {
@@ -56,16 +65,20 @@ export default function CaloriesPage() {
       <AppNav />
       <section className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-4xl font-black">Calorie Counter</h1>
-        <p className="mt-2 text-white/60">Add foods and watch totals update immediately.</p>
+        <p className="mt-2 text-white/60">Enter a food and weight in grams. Calories are estimated automatically.</p>
         <div className="mt-6 grid gap-4 md:grid-cols-3"><StatCard label="Today" value={`${data.totals.today}`} detail="Calories logged" /><StatCard label="Weekly" value={`${data.totals.weekly}`} detail="Last 7 days" /><StatCard label="Monthly" value={`${data.totals.monthly}`} detail="Last 30 days" /></div>
         <div className="mt-6 grid gap-4 lg:grid-cols-[.85fr_1.15fr]">
           <Card>
             <h2 className="font-black">Add food</h2>
             {status && <p className="mt-2 text-sm text-red-200">{status}</p>}
             <form onSubmit={submit} className="mt-4 space-y-4">
-              <Input name="food" placeholder="Food name" required />
-              <Input name="quantity" placeholder="Quantity" required />
-              <Input name="calories" type="number" placeholder="Calories" required />
+              <Input name="food" value={food} onChange={(event) => setFood(event.target.value)} placeholder="Food name" required />
+              <Input name="weightGrams" value={weightGrams} onChange={(event) => setWeightGrams(event.target.value)} type="number" placeholder="Weight (grams)" required />
+              <div className="rounded-md border border-white/10 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Estimated calories</p>
+                <p className="mt-2 text-3xl font-black">{estimate ? estimate.calories : "--"} kcal</p>
+                <p className="mt-1 text-sm text-white/55">{estimate ? `${estimate.matchedFood} at ${estimate.caloriesPer100g} kcal / 100g` : "Add food and weight to calculate"}</p>
+              </div>
               <Button className="w-full"><Plus className="h-4 w-4" /> Add Food</Button>
             </form>
           </Card>

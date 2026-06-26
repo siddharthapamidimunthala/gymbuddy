@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api";
+import { estimateFoodCalories } from "@/lib/nutrition";
 import { prisma } from "@/lib/prisma";
 import { daysAgo, startOfDay } from "@/lib/utils";
 import { calorieSchema } from "@/lib/validation";
@@ -19,6 +20,14 @@ export async function POST(request: Request) {
   if ("error" in auth) return auth.error;
   const parsed = calorieSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const log = await prisma.calorieLog.create({ data: { userId: auth.userId, ...parsed.data } });
+  const estimate = estimateFoodCalories(parsed.data.food, parsed.data.weightGrams);
+  const log = await prisma.calorieLog.create({
+    data: {
+      userId: auth.userId,
+      food: parsed.data.food,
+      quantity: `${parsed.data.weightGrams} g`,
+      calories: estimate.calories
+    }
+  });
   return NextResponse.json(log, { status: 201 });
 }
